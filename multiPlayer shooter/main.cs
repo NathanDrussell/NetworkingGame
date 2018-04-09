@@ -10,11 +10,8 @@ namespace multiPlayer_shooter
     {
         static void Main(string[] args)
         {
-
             Game g = new Game(800, 600);
             g.Run(30.0);
-
-
         }
     }
 }

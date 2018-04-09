@@ -13,30 +13,10 @@ using OpenTK.Input;
 
 namespace multiPlayer_shooter
 {
-    enum MessageTypes
-    {
-        getid = 0,
-        move,
-        id
-    }
-    class Message
-    {
-        public MessageTypes type;
-        public string body;
-        public Message(MessageTypes m, params string[] msg)
-        {
-            type = m;
-            body = "";
-            foreach (string s in msg)
-            {
-                body += " " + s;
-            }
-        }
-    }
     class Game : GameWindow
     {
         const int maxPlayers = 2;
-        static int id = 0;
+        static int id = -1;
         static Entity en;
         static TcpClient connection;
 
@@ -48,8 +28,10 @@ namespace multiPlayer_shooter
             Keyboard.KeyDown += Keyboard_KeyDown;
             connection = new TcpClient("localhost", 8091);
 
-            connection.GetStream().Write(Encoding.ASCII.GetBytes("getid"), 0, Encoding.ASCII.GetBytes("getid").Length);
+            send(new Message(id, Constants.MessageTypes.getid));
 
+            Thread t = new Thread(() => RecData());
+            t.Start();
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -84,8 +66,7 @@ namespace multiPlayer_shooter
             if (e.Key == Key.W)
             {
                 en.UP(10);
-                connection.GetStream().Write(Encoding.ASCII.GetBytes("Test"), 0, Encoding.ASCII.GetBytes("Test").Length);
-
+                send(new Message(id, Constants.MessageTypes.move, en.center.X.ToString(), en.center.Y.ToString()));
             }
             if (e.Key == Key.S)
             {
@@ -101,6 +82,45 @@ namespace multiPlayer_shooter
             }
         }
 
+        private void send(Message m)
+        {
+            connection.GetStream().Write(m.getData(), 0, m.getData().Length);
+        }
+
+        private void RecData()
+        {
+            while (true)
+            {
+                byte[] responseData = new byte[1024];
+                int size = connection.GetStream().Read(responseData, 0, 1024);
+                parseData(Encoding.ASCII.GetString(responseData));
+
+            }
+        }
+
+        private void parseData(string message)
+        {
+            Utilities.Log(message);
+            string[] arr = message.Split(' '.ToString().ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+
+            Constants.MessageTypes type = Constants.TypeFromStrings[arr[2]];
+            int tempid = -1 ;
+            if (int.TryParse(arr[1], out tempid))
+            {
+                if (tempid == id)
+                {
+                    if (type == Constants.MessageTypes.id)
+                    {
+                        id = int.Parse(arr[3]);
+                        Console.Title = "Client " + id;
+                    }
+                }
+            }
+            else
+            {
+
+            }
+        }
         #endregion
     }
 }

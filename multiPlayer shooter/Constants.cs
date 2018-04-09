@@ -8,11 +8,23 @@ namespace multiPlayer_shooter
 {
     class Constants
     {
-        public static Dictionary<MessageTypes, string> MessageTypStrings = new Dictionary<MessageTypes, string>()
+        public enum MessageTypes
+        {
+            getid = 0,
+            move,
+            id
+        }
+        public static Dictionary<MessageTypes, string> StringsFromType = new Dictionary<MessageTypes, string>()
         {
             { MessageTypes.getid, "getid" },
-            { MessageTypes.id, "id"},
+            { MessageTypes.id, "giveid"},
             { MessageTypes.move, "move"}
+        };
+        public static Dictionary<string, MessageTypes> TypeFromStrings = new Dictionary<string, MessageTypes>()
+        {
+            { "getid", MessageTypes.getid },
+            { "giveid", MessageTypes.id},
+            { "move", MessageTypes.move}
         };
     }
 }

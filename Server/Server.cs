@@ -5,38 +5,70 @@ using System.Text;
 using System.Threading;
 using System.Net;
 using System.Net.Sockets;
+using multiPlayer_shooter;
+
 
 namespace Server
 {
-    class Program
+    class Server
     {
         static TcpListener host;
         static Dictionary<int, TcpClient> users;
-
+        
         static void Main(string[] args)
         {
             users = new Dictionary<int, TcpClient>();
             host = new TcpListener(IPAddress.Any, 8091);
             host.Start();
             host.BeginAcceptTcpClient(userConnected, host);
+            Console.Title = "Server";
             while (true) ;
         }
 
-        static void send (NetworkStream n, string message)
+        static void send (string message, int id = -1)
         {
             byte[] b = Encoding.ASCII.GetBytes(message);
-            n.Write(b, 0, b.Length);
+            if (id != -1)
+            {
+                foreach (var a in users.Values)
+                {
+                    a.GetStream().Write(b, 0, b.Length);
+                }
+            }
+            else
+            {
+                users[users.Count].GetStream().Write(b, 0, b.Length);
+            }
         }
 
         static void RecieveData(IAsyncResult ar, ref byte[] data)
         {
             NetworkStream n = ar.AsyncState as NetworkStream;
             int size = n.EndRead(ar);
-            string s = Encoding.ASCII.GetString(data,0, size);
+            string s = Encoding.ASCII.GetString(data, 0, size);
 
-            Console.WriteLine(size + " " + s);
-            byte[] newData = new byte[10000];
-            n.BeginRead(newData, 0, 10000, (ara) => RecieveData(ara, ref newData), n);
+            parseData(ref n, s);
+
+            byte[] newData = new byte[1024];
+            n.BeginRead(newData, 0, 1024, (ara) => RecieveData(ara, ref newData), n);
+        }
+
+        static void parseData(ref NetworkStream n, string msg)
+        {
+            Console.WriteLine(msg);
+
+            string[] arr = msg.Split(' ');
+            Constants.MessageTypes type = Constants.TypeFromStrings[arr[2]];
+
+            if (type == Constants.MessageTypes.getid)
+            {
+                send("id "+ arr[1] + " giveid " + users.Count.ToString());
+            }
+            else if (type == Constants.MessageTypes.move)
+
+            { 
+                send("id host move " + arr[3] + " " + arr[4]);
+            }
         }
 
         static void userConnected(IAsyncResult res)
