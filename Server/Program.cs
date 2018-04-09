@@ -22,6 +22,12 @@ namespace Server
             while (true) ;
         }
 
+        static void send (NetworkStream n, string message)
+        {
+            byte[] b = Encoding.ASCII.GetBytes(message);
+            n.Write(b, 0, b.Length);
+        }
+
         static void RecieveData(IAsyncResult ar, ref byte[] data)
         {
             NetworkStream n = ar.AsyncState as NetworkStream;
