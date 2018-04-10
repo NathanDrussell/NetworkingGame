@@ -30,15 +30,19 @@ namespace Server
             byte[] b = Encoding.ASCII.GetBytes(message);
             if (id != -1)
             {
-                foreach (var a in users.Values)
+                foreach (var a in users)
                 {
-                    a.GetStream().Write(b, 0, b.Length);
+                    if (a.Key != id)
+                    {
+                        a.Value.GetStream().Write(b, 0, b.Length);
+                    }
                 }
             }
-            else
+            else if (id == -1)
             {
                 users[users.Count].GetStream().Write(b, 0, b.Length);
             }
+            
         }
 
         static void RecieveData(IAsyncResult ar, ref byte[] data)
@@ -67,7 +71,7 @@ namespace Server
             else if (type == Constants.MessageTypes.move)
 
             { 
-                send("id host move " + arr[3] + " " + arr[4]);
+                send("id host move " + arr[3] + " " + arr[4], int.Parse(arr[1]));
             }
         }
 

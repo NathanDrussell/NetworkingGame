@@ -33,7 +33,7 @@ namespace multiPlayer_shooter
             Thread t = new Thread(() => RecData());
             t.Start();
         }
-
+        #region dont want to see
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             base.OnRenderFrame(e);
@@ -45,21 +45,19 @@ namespace multiPlayer_shooter
             en.draw(this);
             this.SwapBuffers();
         }
-
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
         }
-
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
         }
-
         protected override void OnClosed(EventArgs e)
         {
             Environment.Exit(0);
         }
+        #endregion
 
         private void Keyboard_KeyDown(object sender, KeyboardKeyEventArgs e)
         {
@@ -71,14 +69,17 @@ namespace multiPlayer_shooter
             if (e.Key == Key.S)
             {
                 en.DOWN(10);
+                send(new Message(id, Constants.MessageTypes.move, en.center.X.ToString(), en.center.Y.ToString()));
             }
             if (e.Key == Key.A)
             {
                 en.LEFT(10);
+                send(new Message(id, Constants.MessageTypes.move, en.center.X.ToString(), en.center.Y.ToString()));
             }
             if (e.Key == Key.D)
             {
                 en.RIGHT(10);
+                send(new Message(id, Constants.MessageTypes.move, en.center.X.ToString(), en.center.Y.ToString()));
             }
         }
 
@@ -101,8 +102,8 @@ namespace multiPlayer_shooter
         private void parseData(string message)
         {
             Utilities.Log(message);
-            string[] arr = message.Split(' '.ToString().ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
+            string[] arr = message.Split(' '.ToString().ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             Constants.MessageTypes type = Constants.TypeFromStrings[arr[2]];
             int tempid = -1 ;
             if (int.TryParse(arr[1], out tempid))
@@ -113,12 +114,17 @@ namespace multiPlayer_shooter
                     {
                         id = int.Parse(arr[3]);
                         Console.Title = "Client " + id;
+                        this.Title = "Client " + id;
                     }
                 }
             }
             else
             {
-
+                if (type == Constants.MessageTypes.move)
+                {
+                    en.center.X = int.Parse(arr[3]);
+                    en.center.Y = int.Parse(arr[4]);
+                }
             }
         }
         #endregion
